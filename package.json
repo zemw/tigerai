@@ -1,0 +1,1 @@
+{"name":"tigerai","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"python3 -m http.server 5173","build":"node scripts/build.mjs","test":"node --test","check":"node --check src/ui.js && node --check src/core/engine.js && node --check src/adapters/provider.js"},"engines":{"node":">=22"}}
