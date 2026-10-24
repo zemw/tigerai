@@ -110,3 +110,13 @@ JSON as text, supports room filters and selected JSON export, and retains logs
 independently from chat deletion. This is best-effort local diagnostics, not a
 durable audit log: page termination can leave pending records and browser storage
 may be unavailable or evicted. Logging intentionally reveals decoded prompts.
+
+## Browser cache consistency
+
+Production builds place all JavaScript modules and CSS in a directory named from
+an SHA-256 content fingerprint of the page, stylesheet, and source tree. The
+published HTML references that release directory. Relative imports remain inside
+the same version, preventing browsers from mixing newly published HTML with old
+cached modules. Changing even a nested module changes the URLs for the release.
+A browser still showing an already-open older page may need a reload to discover
+a new deployment; no browser data or saved credentials need to be cleared.
