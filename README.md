@@ -5,7 +5,7 @@ meet a fictional 20-year-old college student majoring in computer science.
 
 ## Development
 
-Requires Node.js 22+ and Python 3. esbuild is a pinned build-only dependency;
+Requires Node.js 22+ and Python 3. esbuild and Terser are pinned build-only dependencies;
 the published application has no third-party runtime dependencies.
 
 ```sh
@@ -58,10 +58,12 @@ edits, then reload the browser. The previous export/import commands remain
 available, but direct JSON editing is now the normal workflow.
 
 Production builds validate the JSON, Base64-encode it, bundle and minify JavaScript
-with esbuild, minify CSS, and give the finished assets content-versioned URLs.
+with esbuild followed by a Terser compression pass, minify CSS, and give the finished assets content-versioned URLs.
 Only the page, production assets, and license are published in `dist/`; editable
 JSON, source modules, and source maps are excluded. GitHub Actions uses `npm ci`
-to install the locked build dependency before checks and deployment.
+to install locked build dependencies before building and deploying. Automated
+tests run only on explicit request: use `npm test`, or manually dispatch the
+deployment workflow with **run_tests** enabled. Ordinary pushes do not run tests.
 
 Base64 and minification are reversible obfuscation, not secrecy. Readable code
 and plaintext JSON remain publicly available in GitHub, and prompts appear in API
@@ -90,7 +92,7 @@ records. Storage failures show a notice and do not block the API call.
 
 ## Publish
 
-GitHub Actions checks and builds on push to main, then deploys dist to Pages.
+GitHub Actions builds on push to main, then deploys dist to Pages.
 Repository Settings → Pages must use GitHub Actions as source. If automatic
 enablement is denied, the repository owner must enable it manually.
 Expected URL: https://zemw.github.io/tigerai/

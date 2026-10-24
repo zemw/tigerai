@@ -1,6 +1,7 @@
 import { mkdir, cp, rm, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { build, transform } from 'esbuild';
+import { minify } from 'terser';
 import { generatePrompts } from './prompt-config.mjs';
 await generatePrompts();
 // Build in memory first: invalid configuration or bundling failures leave the
@@ -8,10 +9,17 @@ await generatePrompts();
 const result=await build({
   entryPoints:['src/ui.js'],bundle:true,minify:true,write:false,
   format:'esm',platform:'browser',target:['es2022','safari15.4'],
-  sourcemap:false,legalComments:'none',
-  banner:{js:'/*! TigerAI | Noncommercial Source-Sharing License 1.1 | See /tigerai/LICENSE and https://github.com/zemw/tigerai */'}
+  sourcemap:false,legalComments:'none'
 });
-const js=result.outputFiles[0].contents;
+// Terser performs a second compression pass and emits escaped newlines in
+// strings. Do not strip whitespace with a regex: that would alter UI text.
+const compressed=await minify(result.outputFiles[0].text,{
+  module:true,ecma:2022,compress:{passes:2},mangle:true,
+  format:{beautify:false,comments:false,quote_style:0},sourceMap:false
+});
+if(!compressed.code)throw new Error('JavaScript compression produced no output.');
+const notice='/*! TigerAI | Noncommercial Source-Sharing License 1.1 | https://github.com/zemw/tigerai | See LICENSE */';
+const js=Buffer.from(notice+compressed.code.trim());
 const css=(await transform(await readFile('style.css','utf8'),{loader:'css',minify:true,target:'safari15.4'})).code;
 const template=await readFile('index.html','utf8');
 // Version the finished assets, preserving the Safari cache consistency fix.

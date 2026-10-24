@@ -3,7 +3,7 @@
 ## Module boundaries
 
 TigerAI is a static ES module frontend hosted on GitHub Pages, with no third-party
-runtime dependencies. esbuild is a locked development dependency for production
+runtime dependencies. esbuild and Terser are locked development dependencies for production
 bundling and minification.
 
 ```text
@@ -82,8 +82,10 @@ and sanitized provider errors. Build tests verify Unicode configuration round tr
 validation failures, bundled execution, no plaintext prompts/source maps in output,
 and asset version changes. `npm run build` validates/encodes prompts, bundles and
 minifies JavaScript, minifies CSS, and copies HTML and the license into dist.
-GitHub Actions installs locked build dependencies with `npm ci`, runs checks, and
-deploys a Pages artifact without API keys.
+GitHub Actions installs locked build dependencies with `npm ci`, builds, and
+deploys a Pages artifact without API keys. Tests run only when the user requests
+them; ordinary pushes do not run tests. Manual workflow dispatch offers an
+optional `run_tests` input, disabled by default.
 Live model verification requires a user-supplied key and is separate from tests.
 
 ## License and source availability
@@ -138,7 +140,8 @@ an ignored generated module before development, checks, tests, and production
 builds. The decoder preserves Unicode. Existing import/export tooling edits the
 JSON source rather than maintaining a separate encoded configuration.
 
-esbuild bundles the browser entry point to minified ESM targeting ES2022 and
+esbuild bundles the browser entry point, and Terser performs a second compression
+pass with two optimization passes and compact formatting. Output targets ES2022 and
 Safari 15.4 syntax; the existing application still requires the browser APIs it
 uses, such as dialog and IndexedDB. Build dependencies are not browser runtime
 dependencies. Source maps are not published. The distribution contains only

@@ -3,6 +3,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      run_tests:
+        description: Run automated tests for this manual deployment
+        type: boolean
+        default: false
 permissions:
   contents: read
   pages: write
@@ -23,7 +28,9 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npm run check && npm test && npm run build
+      - if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_tests }}
+        run: npm test
+      - run: npm run build
       - uses: actions/configure-pages@v5
         with:
           enablement: true

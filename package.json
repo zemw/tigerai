@@ -18,6 +18,7 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "terser": "5.51.2"
   }
 }
