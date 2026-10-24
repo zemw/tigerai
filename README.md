@@ -43,6 +43,27 @@ Rules have `id`, `enabled`, and `text`. Enabled rules stack in array order. Prof
 prompt changes affect new rooms; rule changes affect subsequent replies. Do not
 commit decoded prompt files. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
+## Local debug logs
+
+Open **Debug logs…** in the menu and enable logging for the current session.
+Logging is off by default and turns off on reload. Future character-generation
+and reply calls are recorded in IndexedDB with the request body, room ID, model,
+endpoint, timestamps, result, status, duration, token usage, and provider request
+ID when available. API keys and authorization headers are excluded; occurrences
+of the active key in recorded values are redacted. Provider error bodies and
+unrecognized response fields are not recorded.
+
+Logs contain full conversation history and decoded prompts. They stay in this
+browser unless you export them. Filter by room, expand entries, select requests,
+and choose **Export selected** to download JSON. Refresh to see completed calls.
+**Clear all logs** removes logs without deleting chats; deleting a chat does not
+remove its logs. Pending entries may indicate an interrupted page or request.
+
+Retention is seven days, at most 200 entries and 10 MB, checked on startup and
+log access/writes. Old entries are removed first. Oversized entries cannot be
+retained. Browser storage can also be cleared or evicted, so export important
+records. Storage failures show a notice and do not block the API call.
+
 ## Publish
 
 GitHub Actions checks and builds on push to main, then deploys dist to Pages.

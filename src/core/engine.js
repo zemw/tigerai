@@ -14,7 +14,7 @@ export class ChatEngine {
     this.busy.add(room.id);
     try {
       if (!room.character) {
-        const profile = await this.provider.complete([{role:'system',content:prompts.character}], signal);
+        const profile = await this.provider.complete([{role:'system',content:prompts.character}], signal, {roomId:room.id, type:'character'});
         if (!profile?.trim()) throw new Error('No character profile was returned. Please try again.');
         room.character = profile; // Persist before requesting a reply; future retries reuse this identity.
         await this.persist(room);
@@ -23,7 +23,7 @@ export class ChatEngine {
       const response = await this.provider.complete([
         {role:'system',content:[prompts.identity, room.character, ...this.rules.filter(r => r.enabled).map(r => r.text)].join('\n\n')},
         ...room.messages.map(({role,content})=>({role,content})), message
-      ], signal);
+      ], signal, {roomId:room.id, type:'reply'});
       if (!response?.trim()) throw new Error('The provider returned an empty reply. Please try again.');
       room.messages.push(message, {role:'assistant',content:response});
       if (room.messages.length === 2) room.title = text.slice(0, 42);

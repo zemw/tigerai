@@ -87,3 +87,26 @@ of modified versions must update that link to their actual running source. Keep
 version-specific source available for the retention period defined in LICENSE.
 Private noncommercial modifications are exempt until distributed or offered to
 other network users. Never publish credentials or user conversations as source.
+
+## Debug logging
+
+`src/adapters/debug-log.js` owns IndexedDB storage, retention, and credential
+redaction. The provider accepts an optional logging object with `enabled()`,
+`store.start(entry)`, `store.finish(id, update)`, and `warn(message)`. The engine
+passes optional `{roomId, type}` context to `complete`; other providers can ignore
+it. No UI or database dependency is introduced into the core.
+
+The provider serializes the request body once, snapshots that body before fetch,
+and records only allowlisted request/response metadata, never headers. The active
+credential is removed from recorded string values, including echoed responses.
+Response content and normalized token counts are logged on success; HTTP/network
+errors use sanitized messages rather than raw provider bodies. Cancellation is
+recorded separately. A log write failure does not fail a model call.
+
+Transactions atomically update entries and enforce seven-day, 200-entry, 10 MB
+retention. Finishing updates only existing entries, so clearing during a request
+does not recreate deleted logs. UI opt-in is session-only. The viewer renders log
+JSON as text, supports room filters and selected JSON export, and retains logs
+independently from chat deletion. This is best-effort local diagnostics, not a
+durable audit log: page termination can leave pending records and browser storage
+may be unavailable or evicted. Logging intentionally reveals decoded prompts.

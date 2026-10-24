@@ -1,7 +1,11 @@
 import { ChatEngine, createRoom } from './core/engine.js';
 import { CompatibleProvider } from './adapters/provider.js';
 import { BrowserStorage } from './adapters/storage.js';
+import { DebugLogStore } from './adapters/debug-log.js';
 const $ = id => document.getElementById(id);
+const debugStore=new DebugLogStore();
+let debugEntries=[];
+const logging={store:debugStore, enabled:()=>$('debug-enabled').checked, warn:message=>{ $('debug-warning').textContent=message; $('debug-warning').hidden=false; }};
 let storage, rooms = [], active = null, engine, controller, busy = false;
 try {
  storage = new BrowserStorage(); rooms = storage.rooms();
@@ -38,7 +42,7 @@ $('connect-form').onsubmit=e=>{
  try {
   const key=$('api-key').value.trim(),settings={endpoint:$('endpoint').value.trim(),model:$('model').value.trim()};
   if(!key||!settings.model)throw new Error('Enter your key and model.');
-  const provider=new CompatibleProvider({key,...settings});
+  const provider=new CompatibleProvider({key,...settings,logging});
   storage.connect(key,$('remember').checked,settings);
   engine=new ChatEngine(provider,async()=>save());
   $('api-key').value='';$('gate').hidden=true;$('desktop').hidden=false;render();
@@ -61,3 +65,52 @@ $('message-form').onsubmit=async e=>{
 window.addEventListener('beforeunload',e=>{if(busy){e.preventDefault();e.returnValue='';}});
 // Avoid silently overwriting chats modified in another tab.
 window.addEventListener('storage',e=>{if(e.key==='tigerai.rooms.v1'){controller?.abort();location.reload();}});
+
+function selectedLogs() { return debugEntries.filter(e=>!$('debug-room').value || e.roomId===$('debug-room').value); }
+function drawLogs() {
+ $('debug-list').replaceChildren();
+ const entries=selectedLogs();
+ if(!entries.length){const p=document.createElement('p');p.textContent='No logs recorded for this selection.';$('debug-list').append(p);}
+ for(const entry of entries){
+  const row=document.createElement('div');row.className='debug-entry';
+  const label=document.createElement('label');label.className='check';
+  const check=document.createElement('input');check.type='checkbox';check.value=entry.id;check.checked=true;check.setAttribute('aria-label',`Select request ${entry.id}`);
+  label.append(check,document.createTextNode(`${new Date(entry.startedAt).toLocaleString()} · ${entry.type} · ${entry.outcome}`));
+  const detail=document.createElement('details'),summary=document.createElement('summary'),pre=document.createElement('pre');
+  summary.textContent=`${entry.request.model} · ${entry.status ?? '—'} · ${entry.durationMs ?? '—'} ms · ${entry.id.slice(0,8)}`;
+  pre.textContent=JSON.stringify(entry,null,2);detail.append(summary,pre);row.append(label,detail);$('debug-list').append(row);
+ }
+ $('debug-export').disabled=!entries.length;
+}
+async function refreshLogs() {
+ try {
+  debugEntries=await debugStore.list();const selected=$('debug-room').value;
+  $('debug-room').replaceChildren(new Option('All rooms',''));
+  for(const id of new Set(debugEntries.map(e=>e.roomId).filter(Boolean))) $('debug-room').add(new Option(rooms.find(r=>r.id===id)?.title || `Room ${id}`,id));
+  $('debug-room').value=[...$('debug-room').options].some(o=>o.value===selected)?selected:'';
+  drawLogs();
+ }catch{ $('debug-notice').textContent='Debug storage is unavailable. Check browser storage permissions.'; }
+}
+$('debug-open').onclick=()=>{ $('debug-dialog').showModal();refreshLogs(); };
+$('debug-close').onclick=()=>$('debug-dialog').close();
+$('debug-refresh').onclick=refreshLogs;
+$('debug-room').onchange=drawLogs;
+$('debug-enabled').onchange=async()=>{
+ if($('debug-enabled').checked)try{await debugStore.open();$('debug-notice').textContent='Logging enabled for future API calls.';}catch{$('debug-enabled').checked=false;$('debug-notice').textContent='Cannot enable logging: browser storage is unavailable.';}
+ else $('debug-notice').textContent='Logging disabled. Existing logs remain until cleared or expired.';
+};
+$('debug-export').onclick=()=>{
+ const ids=new Set([...$('debug-list').querySelectorAll('input:checked')].map(e=>e.value));
+ const selected=selectedLogs().filter(e=>ids.has(e.id));
+ if(!selected.length){$('debug-notice').textContent='Select at least one request to export.';return;}
+ const url=URL.createObjectURL(new Blob([JSON.stringify({format:'tigerai-debug-v1',exportedAt:new Date().toISOString(),requests:selected},null,2)],{type:'application/json'}));
+ const link=document.createElement('a');link.href=url;link.download=`tigerai-debug-${Date.now()}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ $('debug-notice').textContent=`Exported ${selected.length} request(s). Exported files contain conversation text and prompts.`;
+};
+$('debug-clear').onclick=async()=>{
+ if(!confirm('Permanently delete all debug logs from this browser? Chat history will remain.'))return;
+ try{await debugStore.clear();await refreshLogs();$('debug-notice').textContent='All debug logs cleared.';}
+ catch{$('debug-notice').textContent='Debug logs could not be cleared.';}
+};
+// Enforce retention on startup, including sessions where logging is disabled.
+debugStore.list().catch(()=>{});

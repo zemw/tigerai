@@ -7,7 +7,7 @@
     "dev": "python3 -m http.server 5173",
     "build": "node scripts/build.mjs",
     "test": "node --test",
-    "check": "node --check src/ui.js && node --check src/core/engine.js && node --check src/adapters/provider.js"
+    "check": "node --check src/ui.js && node --check src/core/engine.js && node --check src/adapters/provider.js && node --check src/adapters/debug-log.js"
   },
   "engines": {
     "node": ">=22"
