@@ -1,10 +1,11 @@
 import { prompts } from './prompts.js';
+import { ReplyTiming } from './timing.js';
 export function createRoom(id = crypto.randomUUID()) {
   return { id, title: 'New conversation', createdAt: Date.now(), character: null, messages: [] };
 }
 export class ChatEngine {
-  constructor(provider, persist, rules = prompts.rules) {
-    this.provider = provider; this.persist = persist; this.rules = rules; this.busy = new Set();
+  constructor(provider, persist, rules = prompts.rules, timing = new ReplyTiming()) {
+    this.provider = provider; this.persist = persist; this.rules = rules; this.timing = timing; this.busy = new Set();
   }
   async send(room, text, signal) {
     text = text.trim();
@@ -12,6 +13,7 @@ export class ChatEngine {
     if (text.length > 12000) throw new Error('Please keep each message under 12,000 characters.');
     if (this.busy.has(room.id)) throw new Error('A reply is already in progress.');
     this.busy.add(room.id);
+    const startedAt = performance.now();
     try {
       if (!room.character) {
         const profile = await this.provider.complete([{role:'system',content:prompts.character}], signal, {roomId:room.id, type:'character'});
@@ -25,6 +27,8 @@ export class ChatEngine {
         ...room.messages.map(({role,content})=>({role,content})), message
       ], signal, {roomId:room.id, type:'reply'});
       if (!response?.trim()) throw new Error('The provider returned an empty reply. Please try again.');
+      await this.timing?.wait(response, startedAt, signal);
+      if (signal?.aborted) throw new Error('Reply stopped. Your draft is still here.');
       room.messages.push(message, {role:'assistant',content:response});
       if (room.messages.length === 2) room.title = text.slice(0, 42);
       await this.persist(room);

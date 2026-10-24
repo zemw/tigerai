@@ -154,3 +154,28 @@ Neither minification nor Base64 is a security boundary. Repository viewers and
 API/debug-log inspection can recover prompts. Confidential prompts would require
 a backend. This change does not add post-generation rule validation or change
 the character lifecycle.
+
+## Reply pacing
+
+`src/core/timing.js` provides `ReplyTiming`, a UI-independent timing controller.
+`ChatEngine` accepts it as its optional fourth constructor argument; pass `null`
+to disable artificial pacing for a CLI or another integration. The default
+controller computes a length-based target with ±180 ms variation, clamped to
+650–2,200 ms. It subtracts all elapsed generation time since send began (including
+character generation) and caps any additional wait at 1,600 ms. Provider latency
+can exceed the target; this controller does not delay already-slow replies.
+Timing settings are explicit constants, separate from prompt configuration.
+
+After generation, the engine awaits pacing before appending and persisting the
+user/assistant pair. AbortSignal cancels both networking and this delay, with
+timer/listener cleanup, preserving the existing retry semantics. Already-saved
+characters remain frozen; a cancelled pending reply is not added to room history.
+API logs record the real network result immediately, so a successful API result
+may be logged even if the user stops during presentation pacing.
+
+The UI renders the pending user message and a live typing bubble while send is
+in progress, then replaces them with saved messages on success or removes them on
+error/cancellation. Pending text is presentation-only and is not persisted. The
+bubble uses text and CSS dots with reduced-motion support. No artificial delays
+are added to profile persistence, errors, or API debug logging. Browser timer
+throttling/background suspension may postpone presentation beyond these targets.

@@ -69,6 +69,19 @@ Base64 and minification are reversible obfuscation, not secrecy. Readable code
 and plaintext JSON remain publicly available in GitHub, and prompts appear in API
 requests and opt-in debug logs. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
+## Reply pacing
+
+A typing bubble appears immediately after sending, alongside your pending message.
+Replies use a short length-based delay with random variation. API time (including
+first-time character creation) counts toward a 650–2,200 ms target, and the app
+adds at most 1,600 ms after generation. Slow API calls add no artificial wait.
+These are pacing targets, not a limit on your provider's response time.
+
+Edit `DEFAULT_TIMING` in `src/core/timing.js` to tune the minimum, maximum,
+per-character rate, random variation, or maximum added delay. Stop cancels the
+API call or pacing delay and preserves your draft. Animated dots respect reduced
+motion preferences. Debug log durations measure API calls, excluding pacing.
+
 ## Local debug logs
 
 Open **Debug logs…** in the menu and enable logging for the current session.

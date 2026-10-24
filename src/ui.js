@@ -6,7 +6,7 @@ const $ = id => document.getElementById(id);
 const debugStore=new DebugLogStore();
 let debugEntries=[];
 const logging={store:debugStore, enabled:()=>$('debug-enabled').checked, warn:message=>{ $('debug-warning').textContent=message; $('debug-warning').hidden=false; }};
-let storage, rooms = [], active = null, engine, controller, busy = false;
+let storage, rooms = [], active = null, engine, controller, busy = false, pendingText = null;
 try {
  storage = new BrowserStorage(); rooms = storage.rooms();
  $('api-key').value = storage.key(); $('remember').checked = !!$('api-key').value;
@@ -31,8 +31,15 @@ function render() {
  $('messages').replaceChildren();
  if(active){
   $('character-label').textContent=active.character?'Your familiar acquaintance':'A new acquaintance';
-  if(!active.messages.length){const note=document.createElement('p');note.className='message intro';note.textContent='Every friendship starts with hello. Your character is created when you send your first message.';$('messages').append(note);}
-  for(const m of active.messages){const el=document.createElement('div');el.className=`message ${m.role}`;const label=document.createElement('b');label.textContent=m.role==='user'?'YOU':'YOUR COMPANION';el.append(label,document.createTextNode(m.content));$('messages').append(el);}
+  if(!active.messages.length && !busy){const note=document.createElement('p');note.className='message intro';note.textContent='Every friendship starts with hello. Your character is created when you send your first message.';$('messages').append(note);}
+  for(const m of [...active.messages, ...(busy && pendingText ? [{role:'user',content:pendingText}] : [])]){const el=document.createElement('div');el.className=`message ${m.role}`;const label=document.createElement('b');label.textContent=m.role==='user'?'YOU':'YOUR COMPANION';el.append(label,document.createTextNode(m.content));$('messages').append(el);}
+  if(busy){
+   const indicator=document.createElement('div');indicator.className='message typing';indicator.setAttribute('role','status');
+   const text=document.createElement('span');text.textContent='Your companion is typing';
+   const dots=document.createElement('span');dots.className='typing-dots';dots.setAttribute('aria-hidden','true');
+   for(let i=0;i<3;i++){const dot=document.createElement('span');dot.textContent='.';dots.append(dot);}
+   indicator.append(text,dots);$('messages').append(indicator);
+  }
  }
  $('messages').scrollTop=$('messages').scrollHeight;
 }
@@ -57,10 +64,10 @@ $('message').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.pr
 $('message-form').onsubmit=async e=>{
  e.preventDefault();if(busy||!active)return;
  const text=$('message').value;if(!text.trim())return;
- busy=true;controller=new AbortController();$('chat-error').textContent='';$('send').disabled=true;$('new-room').disabled=true;$('exit').disabled=true;$('connection').disabled=true;$('stop').hidden=false;$('message').readOnly=true;$('status').textContent=active.character?'Your companion is typing…':'Meeting your character…';render();
+ pendingText=text.trim();busy=true;controller=new AbortController();$('chat-error').textContent='';$('send').disabled=true;$('new-room').disabled=true;$('exit').disabled=true;$('connection').disabled=true;$('stop').hidden=false;$('message').readOnly=true;$('status').textContent='Your companion is typing…';render();
  try{await engine.send(active,text,controller.signal);$('message').value='';}
  catch(e){error('chat-error',e);}
- finally{busy=false;controller=null;$('send').disabled=false;$('new-room').disabled=false;$('exit').disabled=false;$('connection').disabled=false;$('stop').hidden=true;$('message').readOnly=false;$('status').textContent='Ready.';render();$('message').focus();}
+ finally{busy=false;pendingText=null;controller=null;$('send').disabled=false;$('new-room').disabled=false;$('exit').disabled=false;$('connection').disabled=false;$('stop').hidden=true;$('message').readOnly=false;$('status').textContent='Ready.';render();$('message').focus();}
 };
 window.addEventListener('beforeunload',e=>{if(busy){e.preventDefault();e.returnValue='';}});
 // Avoid silently overwriting chats modified in another tab.
