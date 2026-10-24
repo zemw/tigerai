@@ -1,0 +1,36 @@
+{
+  "_comments": {
+    "_comments": "Documentation only. Excluded from generated runtime configuration. Change settings below, then regenerate config or rebuild and reload.",
+    "timing": "Messaging pace. A random pre-typing pause is followed by length-proportional typing. Duration settings are milliseconds; speed is characters per minute.",
+    "timing.beforeTypingMinimumMs": "Shortest random pause after sending before generation and the typing indicator start. Default 1000 = 1 second; 0 allows an immediate start.",
+    "timing.beforeTypingMaximumMs": "Longest random pre-typing pause. The pause is sampled uniformly between this value and beforeTypingMinimumMs. Must be at least that minimum.",
+    "timing.minimumMs": "Minimum typing-phase target for very short replies. API generation time counts toward this duration.",
+    "chat": "Editable message and room-name limits. These values must be positive integers.",
+    "chat.maximumMessageCharacters": "Maximum user-message length, counted as JavaScript string units (some emoji count as two). Enforced by the input and engine.",
+    "chat.roomTitleCharacters": "Maximum manually entered room-name length and automatic first-message title length, in JavaScript string units. Custom names are not overwritten by automatic naming.",
+    "debug": "Local debug-log capacity, retention and export cleanup settings. Changes do not turn logging on; users still opt in each session.",
+    "debug.maximumBytes": "Maximum retained log size in bytes, measured from UTF-8 JSON entries. 10485760 = 10 MiB. Older entries are removed first; individual oversized requests are not recorded.",
+    "debug.maximumEntries": "Maximum number of API request log entries retained, newest first. Each character-generation or reply call counts separately.",
+    "debug.maximumAgeMs": "Maximum log age in milliseconds from request start. 604800000 = 7 days. Expiry is enforced on startup and log access/writes, not by a background scheduler.",
+    "debug.exportUrlLifetimeMs": "Milliseconds to keep the temporary JSON download URL alive after export begins. This is download cleanup timing, not a log-retention or file-expiry limit.",
+    "timing.charactersPerMinute": "Base typing speed in Unicode code points per minute, including spaces and punctuation. 300 means 5 characters/second: 100 characters take about 20 seconds and 500 about 100 seconds. Must be greater than zero. There is no short duration cap.",
+    "timing.speedVariationFraction": "Random fractional variation in typing speed for each reply. 0.12 samples speed within \u00b112% of charactersPerMinute; 0 disables variation. Must be at least 0 and less than 1. Generation time is subtracted from the resulting typing duration."
+  },
+  "timing": {
+    "minimumMs": 650,
+    "beforeTypingMinimumMs": 1000,
+    "beforeTypingMaximumMs": 4200,
+    "charactersPerMinute": 300,
+    "speedVariationFraction": 0.12
+  },
+  "chat": {
+    "maximumMessageCharacters": 12000,
+    "roomTitleCharacters": 42
+  },
+  "debug": {
+    "maximumBytes": 10485760,
+    "maximumEntries": 200,
+    "maximumAgeMs": 604800000,
+    "exportUrlLifetimeMs": 1000
+  }
+}

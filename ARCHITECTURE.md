@@ -160,13 +160,14 @@ the character lifecycle.
 `src/core/timing.js` provides `ReplyTiming`, a UI-independent timing controller.
 `ChatEngine` accepts it as its optional fourth constructor argument; pass `null`
 to disable artificial pacing for a CLI or another integration. The default
-controller computes a length-based target with ±180 ms variation, clamped to
-650–2,200 ms. It subtracts all elapsed generation time since send began (including
-character generation) and caps any additional wait at 1,600 ms. Provider latency
-can exceed the target; this controller does not delay already-slow replies.
-`config/timing.json` is the sole source of timing defaults, separate from prompt
-configuration. `scripts/config.mjs` validates all five settings and generates the
-ignored `src/core/timing.generated.js` for the timing controller. Production builds
+controller computes typing duration as reply Unicode code points divided by the
+configured charactersPerMinute, converted to milliseconds. Each reply samples
+speed with ±speedVariationFraction variation (default 12%). minimumMs provides a
+floor for short replies. Elapsed generation time is subtracted; there is no
+short maximum-duration or added-wait cap. The pre-typing pause is separate.
+`config/constants.json` contains timing defaults in its `timing` section;
+`config/prompts.json` remains separate for prompts and ordered rules. `scripts/config.mjs` validates the grouped numeric settings and generates the
+ignored `src/core/constants.generated.js` for timing, chat limits, and debug logs. Production builds
 and development/check/test precommands generate both configurations automatically.
 `npm run config:generate` refreshes them for a running local server. Validation is
 shared by build and runtime overrides; it rejects missing/unknown fields, negative
@@ -181,9 +182,32 @@ characters remain frozen; a cancelled pending reply is not added to room history
 API logs record the real network result immediately, so a successful API result
 may be logged even if the user stops during presentation pacing.
 
-The UI renders the pending user message and a live typing bubble while send is
-in progress, then replaces them with saved messages on success or removes them on
+The UI renders the pending user message immediately and a bottom typing status after
+the pre-typing pause, then replaces them with saved messages on success or removes them on
 error/cancellation. Pending text is presentation-only and is not persisted. The
-bubble uses text and CSS dots with reduced-motion support. No artificial delays
+status uses text and CSS dots with reduced-motion support. No artificial delays
 are added to profile persistence, errors, or API debug logging. Browser timer
 throttling/background suspension may postpone presentation beyond these targets.
+
+## Local change workflow
+
+Keep code changes local unless the user explicitly requests publication. Building
+only writes local dist assets. The prompts/rules file remains separate from the
+constants file; add future tunable numeric settings to constants.json rather than
+introducing one JSON file per feature. Protocol codes, schema versions, unit
+conversions, algorithm indices, and platform constraints remain code details.
+
+## Pre-typing pause and room names
+
+Timing configuration includes beforeTypingMinimumMs/beforeTypingMaximumMs.
+The engine waits this random, abortable interval before starting generation, then
+calls the optional send callback onTyping. Reply-length pacing measures elapsed
+time from that phase onward. The UI keeps the typing status above the composer,
+outside the message log, and removes it on completion, error, or cancellation.
+Room rename edits title and a customTitle marker and persists both locally; the
+engine preserves that marker when applying automatic first-message titles.
+
+Room-name editing uses an inline text input at the clicked label rather than a
+modal. It selects the existing name, saves on Enter/blur, cancels on Escape, and
+restores the old title on blank input or storage failure. Blur restores labels
+without rerendering the room list, preserving the next click's target.

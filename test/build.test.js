@@ -21,7 +21,7 @@ test('production bundles, minifies and encodes JSON; asset URLs change with nest
  try{
   await mkdir(path.join(dir,'src/core'),{recursive:true});await mkdir(path.join(dir,'config'));
   await writeFile(path.join(dir,'config/prompts.json'),JSON.stringify(prompts));
-  await writeFile(path.join(dir,'config/timing.json'),JSON.stringify({minimumMs:650,maximumMs:2200,perCharacterMs:8,variationMs:180,maximumExtraMs:1600}));
+  await writeFile(path.join(dir,'config/constants.json'),JSON.stringify({"timing":{"minimumMs":650,"beforeTypingMinimumMs":1000,"beforeTypingMaximumMs":4200,"charactersPerMinute":300,"speedVariationFraction":0.12},"chat":{"maximumMessageCharacters":12000,"roomTitleCharacters":42},"debug":{"maximumBytes":10485760,"maximumEntries":200,"maximumAgeMs":604800000,"exportUrlLifetimeMs":1000}}));
   await writeFile(path.join(dir,'index.html'),'<link href="./style.css"><script type="module" src="./src/ui.js"></script>');
   await writeFile(path.join(dir,'style.css'),'body { color: black; }');await writeFile(path.join(dir,'LICENSE'),'test');
   await writeFile(path.join(dir,'src/ui.js'),"import {prompts} from './core/prompts.generated.js'; import {version} from './core/test.js'; globalThis.testResult = {prompts,version};");

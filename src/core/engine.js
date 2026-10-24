@@ -1,5 +1,6 @@
 import { prompts } from './prompts.js';
 import { ReplyTiming } from './timing.js';
+import { constants } from './constants.generated.js';
 export function createRoom(id = crypto.randomUUID()) {
   return { id, title: 'New conversation', createdAt: Date.now(), character: null, messages: [] };
 }
@@ -7,14 +8,17 @@ export class ChatEngine {
   constructor(provider, persist, rules = prompts.rules, timing = new ReplyTiming()) {
     this.provider = provider; this.persist = persist; this.rules = rules; this.timing = timing; this.busy = new Set();
   }
-  async send(room, text, signal) {
+  async send(room, text, signal, {onTyping} = {}) {
     text = text.trim();
     if (!text) throw new Error('Please enter a message.');
-    if (text.length > 12000) throw new Error('Please keep each message under 12,000 characters.');
+    if (text.length > constants.chat.maximumMessageCharacters) throw new Error(`Please keep each message within ${constants.chat.maximumMessageCharacters.toLocaleString()} characters.`);
     if (this.busy.has(room.id)) throw new Error('A reply is already in progress.');
     this.busy.add(room.id);
-    const startedAt = performance.now();
     try {
+      await this.timing?.beforeTyping(signal);
+      if (signal?.aborted) throw new Error('Reply stopped. Your draft is still here.');
+      onTyping?.();
+      const startedAt = performance.now();
       if (!room.character) {
         const profile = await this.provider.complete([{role:'system',content:prompts.character}], signal, {roomId:room.id, type:'character'});
         if (!profile?.trim()) throw new Error('No character profile was returned. Please try again.');
@@ -30,7 +34,7 @@ export class ChatEngine {
       await this.timing?.wait(response, startedAt, signal);
       if (signal?.aborted) throw new Error('Reply stopped. Your draft is still here.');
       room.messages.push(message, {role:'assistant',content:response});
-      if (room.messages.length === 2) room.title = text.slice(0, 42);
+      if (room.messages.length === 2 && !room.customTitle) room.title = text.slice(0, constants.chat.roomTitleCharacters);
       await this.persist(room);
       return response;
     } finally { this.busy.delete(room.id); }

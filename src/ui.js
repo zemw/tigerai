@@ -2,11 +2,14 @@ import { ChatEngine, createRoom } from './core/engine.js';
 import { CompatibleProvider } from './adapters/provider.js';
 import { BrowserStorage } from './adapters/storage.js';
 import { DebugLogStore } from './adapters/debug-log.js';
+import { constants } from './core/constants.generated.js';
 const $ = id => document.getElementById(id);
+$('message').maxLength=constants.chat.maximumMessageCharacters;
+$('debug-retention').textContent=`Kept for up to ${Math.round(constants.debug.maximumAgeMs / 86400000 * 100) / 100} days, ${constants.debug.maximumEntries} calls or ${Math.round(constants.debug.maximumBytes / 1048576 * 100) / 100} MB. Export logs you want to keep. Pending means no completion was recorded, for example after closing the page. Clearing a chat does not clear its debug logs.`;
 const debugStore=new DebugLogStore();
 let debugEntries=[];
 const logging={store:debugStore, enabled:()=>$('debug-enabled').checked, warn:message=>{ $('debug-warning').textContent=message; $('debug-warning').hidden=false; }};
-let storage, rooms = [], active = null, engine, controller, busy = false, pendingText = null;
+let storage, rooms = [], active = null, engine, controller, busy = false, pendingText = null, typing = false, renameEditor = null, draftRevision = 0;
 try {
  storage = new BrowserStorage(); rooms = storage.rooms();
  $('api-key').value = storage.key(); $('remember').checked = !!$('api-key').value;
@@ -19,28 +22,23 @@ function render() {
  $('rooms').replaceChildren();
  for(const room of rooms) {
   const row=document.createElement('div'); row.className='room'+(room.id===active?.id?' selected':'');
-  const open=document.createElement('button'); open.textContent=room.title;
+  const open=document.createElement('button');const name=document.createElement('span');name.dataset.roomLabel=room.id;name.textContent=room.title;open.append(name);
   const date=document.createElement('small'); date.textContent=new Date(room.createdAt).toLocaleDateString(); open.append(date);
-  open.disabled=busy; open.onclick=()=>{active=room;render();$('message').focus();};
+  open.disabled=busy;open.title=active?.id===room.id?'Click to rename this chat room':'Open this chat room';open.onclick=()=>{if(active?.id===room.id){renameRoom(room,open);return;}active=room;render();$('message').focus();};
   const del=document.createElement('button');del.className='delete';del.textContent='×';del.setAttribute('aria-label',`Delete ${room.title}`);del.disabled=busy;
   del.onclick=()=>{if(confirm('Delete this conversation and its character from this browser?')){const previous=rooms;rooms=rooms.filter(r=>r.id!==room.id);try{save();if(active?.id===room.id)active=null;render();}catch(e){rooms=previous;error('chat-error',e);}}};
   row.append(open,del);$('rooms').append(row);
  }
  $('empty').hidden=!!active;$('conversation').hidden=!active;
  $('room-title').textContent=active?active.title:'TigerAI — Chat rooms';
+ $('room-title').disabled=busy||!active;
  $('messages').replaceChildren();
  if(active){
   $('character-label').textContent=active.character?'Your familiar acquaintance':'A new acquaintance';
   if(!active.messages.length && !busy){const note=document.createElement('p');note.className='message intro';note.textContent='Every friendship starts with hello. Your character is created when you send your first message.';$('messages').append(note);}
   for(const m of [...active.messages, ...(busy && pendingText ? [{role:'user',content:pendingText}] : [])]){const el=document.createElement('div');el.className=`message ${m.role}`;const label=document.createElement('b');label.textContent=m.role==='user'?'YOU':'YOUR COMPANION';el.append(label,document.createTextNode(m.content));$('messages').append(el);}
-  if(busy){
-   const indicator=document.createElement('div');indicator.className='message typing';indicator.setAttribute('role','status');
-   const text=document.createElement('span');text.textContent='Your companion is typing';
-   const dots=document.createElement('span');dots.className='typing-dots';dots.setAttribute('aria-hidden','true');
-   for(let i=0;i<3;i++){const dot=document.createElement('span');dot.textContent='.';dots.append(dot);}
-   indicator.append(text,dots);$('messages').append(indicator);
-  }
  }
+ $('typing-indicator').hidden=!typing;
  $('messages').scrollTop=$('messages').scrollHeight;
 }
 function newRoom(){if(busy)return;const room=createRoom();rooms.unshift(room);try{save();active=room;$('message').value='';$('chat-error').textContent='';render();$('message').focus();}catch(e){rooms.shift();error('chat-error',e);}}
@@ -60,14 +58,21 @@ $('remember').onchange=()=>{if(!$('remember').checked)try{storage.forget();}catc
 $('new-room').onclick=newRoom;$('start').onclick=newRoom;
 $('exit').onclick=()=>{if(!busy){active=null;$('message').value='';$('chat-error').textContent='';render();}};
 $('stop').onclick=()=>controller?.abort();
+$('message').addEventListener('input',()=>{draftRevision++;});
 $('message').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(!busy)$('message-form').requestSubmit();}};
 $('message-form').onsubmit=async e=>{
  e.preventDefault();if(busy||!active)return;
  const text=$('message').value;if(!text.trim())return;
- pendingText=text.trim();busy=true;controller=new AbortController();$('chat-error').textContent='';$('send').disabled=true;$('new-room').disabled=true;$('exit').disabled=true;$('connection').disabled=true;$('stop').hidden=false;$('message').readOnly=true;$('status').textContent='Your companion is typing…';render();
- try{await engine.send(active,text,controller.signal);$('message').value='';}
- catch(e){error('chat-error',e);}
- finally{busy=false;pendingText=null;controller=null;$('send').disabled=false;$('new-room').disabled=false;$('exit').disabled=false;$('connection').disabled=false;$('stop').hidden=true;$('message').readOnly=false;$('status').textContent='Ready.';render();$('message').focus();}
+ const sentRevision=draftRevision;
+ $('message').value='';
+ pendingText=text.trim();typing=false;busy=true;controller=new AbortController();$('chat-error').textContent='';$('send').disabled=true;$('new-room').disabled=true;$('exit').disabled=true;$('connection').disabled=true;$('stop').hidden=false;$('status').textContent='Message sent.';render();$('message').focus();
+ try{await engine.send(active,text,controller.signal,{onTyping:()=>{typing=true;$('typing-indicator').hidden=false;$('status').textContent='Your companion is typing…';}});}
+ catch(e){
+  // Restore the failed message only if the user has not started another draft.
+  if(draftRevision===sentRevision && !$('message').value)$('message').value=text;
+  error('chat-error',e);
+ }
+ finally{busy=false;typing=false;pendingText=null;controller=null;$('send').disabled=false;$('new-room').disabled=false;$('exit').disabled=false;$('connection').disabled=false;$('stop').hidden=true;$('status').textContent='Ready.';render();$('message').focus();}
 };
 window.addEventListener('beforeunload',e=>{if(busy){e.preventDefault();e.returnValue='';}});
 // Avoid silently overwriting chats modified in another tab.
@@ -111,7 +116,7 @@ $('debug-export').onclick=()=>{
  const selected=selectedLogs().filter(e=>ids.has(e.id));
  if(!selected.length){$('debug-notice').textContent='Select at least one request to export.';return;}
  const url=URL.createObjectURL(new Blob([JSON.stringify({format:'tigerai-debug-v1',exportedAt:new Date().toISOString(),requests:selected},null,2)],{type:'application/json'}));
- const link=document.createElement('a');link.href=url;link.download=`tigerai-debug-${Date.now()}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ const link=document.createElement('a');link.href=url;link.download=`tigerai-debug-${Date.now()}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),constants.debug.exportUrlLifetimeMs);
  $('debug-notice').textContent=`Exported ${selected.length} request(s). Exported files contain conversation text and prompts.`;
 };
 $('debug-clear').onclick=async()=>{
@@ -121,3 +126,33 @@ $('debug-clear').onclick=async()=>{
 };
 // Enforce retention on startup, including sessions where logging is disabled.
 debugStore.list().catch(()=>{});
+
+function renameRoom(room, label) {
+ if(busy || renameEditor)return;
+ const input=document.createElement('input');input.type='text';input.className='room-name-editor';
+ input.value=room.title;input.maxLength=constants.chat.roomTitleCharacters;
+ input.setAttribute('aria-label','Room name');input.title='Enter to save · Escape to cancel';
+ input.autocomplete='off';label.hidden=true;label.before(input);
+ let finished=false;
+ const finish=(cancel=false,focusLabel=false)=>{
+  if(finished)return;
+  const name=input.value.trim();
+  if(!cancel && name && name!==room.title){
+   const previous={title:room.title,customTitle:room.customTitle};
+   room.title=name;room.customTitle=true;
+   try{save();}catch(e){Object.assign(room,previous);error('chat-error',e);}
+  }
+  finished=true;renameEditor=null;input.remove();label.hidden=false;
+  for(const el of $('rooms').querySelectorAll('[data-room-label]'))if(el.dataset.roomLabel===room.id)el.textContent=room.title;
+  if(active?.id===room.id)$('room-title').textContent=room.title;
+  if(focusLabel)label.focus();
+ };
+ renameEditor={finish};
+ input.onkeydown=e=>{
+  if(e.isComposing)return;
+  if(e.key==='Enter'){e.preventDefault();finish(false,true);}
+  else if(e.key==='Escape'){e.preventDefault();finish(true,true);}
+ };
+ input.onblur=()=>finish();input.focus();input.select();
+}
+$('room-title').onclick=()=>{if(active)renameRoom(active,$('room-title'));};

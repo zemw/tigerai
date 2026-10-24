@@ -1,6 +1,7 @@
-export const MAX_LOG_BYTES = 10 * 1024 * 1024;
-export const MAX_LOG_ENTRIES = 200;
-export const MAX_LOG_AGE = 7 * 86400000;
+import { constants } from '../core/constants.generated.js';
+export const MAX_LOG_BYTES = constants.debug.maximumBytes;
+export const MAX_LOG_ENTRIES = constants.debug.maximumEntries;
+export const MAX_LOG_AGE = constants.debug.maximumAgeMs;
 export function retainedLogs(entries, now = Date.now()) {
   let bytes = 0;
   return entries.filter(e => e.startedAt >= now - MAX_LOG_AGE)

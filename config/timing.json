@@ -1,7 +1,0 @@
-{
-  "minimumMs": 650,
-  "maximumMs": 2200,
-  "perCharacterMs": 8,
-  "variationMs": 180,
-  "maximumExtraMs": 1600
-}

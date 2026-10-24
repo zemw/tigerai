@@ -69,29 +69,43 @@ Base64 and minification are reversible obfuscation, not secrecy. Readable code
 and plaintext JSON remain publicly available in GitHub, and prompts appear in API
 requests and opt-in debug logs. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
+## Configuration files
+
+- `config/prompts.json`: character prompt, identity instruction, and ordered rules.
+- `config/constants.json`: numeric settings grouped into `timing`, `chat` (message
+  length and room-title length), and `debug` (retention, capacity, export cleanup).
+
+Each file includes a `_comments` section explaining every setting, its units,
+limits, and effects. These are valid JSON documentation fields, not JavaScript
+comments, and the generator excludes them from runtime configuration and prompts.
+Both files are editable sources. Run `npm run config:generate` for local use or
+`npm run build` for production output. Generated modules are ignored by Git.
+Keep changes local until publication is explicitly requested.
+
 ## Reply pacing
 
-A typing bubble appears immediately after sending, alongside your pending message.
-Replies use a short length-based delay with random variation. API time (including
-first-time character creation) counts toward a 650–2,200 ms target, and the app
-adds at most 1,600 ms after generation. Slow API calls add no artificial wait.
-These are pacing targets, not a limit on your provider's response time.
+Your message appears immediately. A random 1–2.2 second pause comes before
+generation starts and the typing indicator appears in a fixed strip above the
+composer, separate from conversation bubbles.
+Typing duration is proportional to the complete reply length at a configurable
+speed, defaulting to 300 Unicode characters per minute (5 per second). A random
+±12% speed variation makes each reply slightly different. There is no short
+maximum wait: 100 characters take roughly 20 seconds, 500 roughly 100 seconds.
+API time counts toward that duration, so it is not added again. Stop cancels
+both generation and any remaining typing delay.
 
-Edit **[config/timing.json](config/timing.json)** to tune pacing without changing
-JavaScript. All values are in milliseconds:
+Edit `timing` in **[config/constants.json](config/constants.json)**:
 
-| Setting | Meaning | Default |
-| --- | --- | --- |
-| `minimumMs` | Minimum target time from send to reply | 650 |
-| `maximumMs` | Maximum pacing target (not an API timeout) | 2200 |
-| `perCharacterMs` | Added target time per response character | 8 |
-| `variationMs` | Random variation in either direction | 180 |
-| `maximumExtraMs` | Maximum artificial wait after generation | 1600 |
+| Setting | Meaning |
+| --- | --- |
+| `beforeTypingMinimumMs` | Minimum random pause before typing starts |
+| `beforeTypingMaximumMs` | Maximum random pause before typing starts |
+| `minimumMs` | Minimum typing duration for very short replies |
+| `charactersPerMinute` | Base typing speed; larger means faster |
+| `speedVariationFraction` | Random fractional speed variation; 0 disables it |
 
-Run `npm run build` to publish changes. During development, restart `npm run dev`
-or run `npm run config:generate` and reload. Invalid or missing values, unknown
-setting names, and a maximum smaller than the minimum fail configuration loading.
-Timing JSON is bundled into the versioned script; it is not fetched separately.
+Rebuild locally or run `npm run config:generate` and reload the development page.
+Constants JSON is bundled into the versioned script; it is not fetched separately.
  Stop cancels the
 API call or pacing delay and preserves your draft. Animated dots respect reduced
 motion preferences. Debug log durations measure API calls, excluding pacing.
@@ -147,3 +161,16 @@ The complete license defines the scope and takes precedence over this summary.
 Intentionally submitted contributions also authorize zemw to grant commercial
 licenses for those contributions; contributors retain copyright. See section 7.
 Earlier releases retain the permissions already granted under their earlier terms.
+
+## Renaming chat rooms
+
+Click the active room's label in the sidebar, or its title at the top of the chat,
+to edit it in place with the current name selected. Click an inactive room once
+to open it, then click its label again to edit. Enter or clicking elsewhere saves
+the name locally; Escape cancels. An empty name leaves the old name unchanged.
+Custom names are preserved when the first reply would normally name a new room.
+
+The composer clears immediately when sending and stays editable while waiting.
+You can prepare the next message, then send it after the current reply finishes.
+Reply completion never clears that next draft. On failure or cancellation, the
+original message is restored only if you have not edited a new draft.
