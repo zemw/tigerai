@@ -77,8 +77,22 @@ first-time character creation) counts toward a 650–2,200 ms target, and the ap
 adds at most 1,600 ms after generation. Slow API calls add no artificial wait.
 These are pacing targets, not a limit on your provider's response time.
 
-Edit `DEFAULT_TIMING` in `src/core/timing.js` to tune the minimum, maximum,
-per-character rate, random variation, or maximum added delay. Stop cancels the
+Edit **[config/timing.json](config/timing.json)** to tune pacing without changing
+JavaScript. All values are in milliseconds:
+
+| Setting | Meaning | Default |
+| --- | --- | --- |
+| `minimumMs` | Minimum target time from send to reply | 650 |
+| `maximumMs` | Maximum pacing target (not an API timeout) | 2200 |
+| `perCharacterMs` | Added target time per response character | 8 |
+| `variationMs` | Random variation in either direction | 180 |
+| `maximumExtraMs` | Maximum artificial wait after generation | 1600 |
+
+Run `npm run build` to publish changes. During development, restart `npm run dev`
+or run `npm run config:generate` and reload. Invalid or missing values, unknown
+setting names, and a maximum smaller than the minimum fail configuration loading.
+Timing JSON is bundled into the versioned script; it is not fetched separately.
+ Stop cancels the
 API call or pacing delay and preserves your draft. Animated dots respect reduced
 motion preferences. Debug log durations measure API calls, excluding pacing.
 

@@ -2,8 +2,8 @@ import { mkdir, cp, rm, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { build, transform } from 'esbuild';
 import { minify } from 'terser';
-import { generatePrompts } from './prompt-config.mjs';
-await generatePrompts();
+import { generateConfig } from './config.mjs';
+await generateConfig();
 // Build in memory first: invalid configuration or bundling failures leave the
 // previous output intact. Only generated Base64 prompt configuration is bundled.
 const result=await build({

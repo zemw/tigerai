@@ -1,19 +1,11 @@
 // Presentation pacing only: no prompts, DOM, provider, or storage dependencies.
 // API time counts toward the target; a slow request adds no artificial wait.
-export const DEFAULT_TIMING = Object.freeze({
-  minimumMs: 650,
-  maximumMs: 2200,
-  perCharacterMs: 8,
-  variationMs: 180,
-  maximumExtraMs: 1600
-});
+import { timingConfig } from './timing.generated.js';
+import { validateTiming } from './timing-config.js';
+export const DEFAULT_TIMING = Object.freeze(validateTiming(timingConfig));
 export class ReplyTiming {
   constructor(options = {}) {
-    this.options = {...DEFAULT_TIMING, ...options};
-    for (const value of Object.values(this.options)) {
-      if (!Number.isFinite(value) || value < 0) throw new Error('Timing settings must be finite nonnegative numbers.');
-    }
-    if (this.options.maximumMs < this.options.minimumMs) throw new Error('Maximum reply timing must be at least the minimum.');
+    this.options = validateTiming({...DEFAULT_TIMING, ...options});
   }
   remainingMs(text, elapsedMs) {
     const {minimumMs, maximumMs, perCharacterMs, variationMs, maximumExtraMs} = this.options;

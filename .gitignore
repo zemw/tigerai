@@ -4,3 +4,4 @@ node_modules/
 .env*
 prompts.local.json
 src/core/prompts.generated.js
+src/core/timing.generated.js

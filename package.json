@@ -9,9 +9,10 @@
     "test": "node --test",
     "check": "node --check src/ui.js && node --check src/core/engine.js && node --check src/adapters/provider.js && node --check src/adapters/debug-log.js",
     "prompts:generate": "node scripts/generate-prompts.mjs",
-    "predev": "npm run prompts:generate",
-    "precheck": "npm run prompts:generate",
-    "pretest": "npm run prompts:generate"
+    "predev": "npm run config:generate",
+    "precheck": "npm run config:generate",
+    "pretest": "npm run config:generate",
+    "config:generate": "node scripts/generate-config.mjs"
   },
   "engines": {
     "node": ">=22"

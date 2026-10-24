@@ -164,7 +164,15 @@ controller computes a length-based target with ±180 ms variation, clamped to
 650–2,200 ms. It subtracts all elapsed generation time since send began (including
 character generation) and caps any additional wait at 1,600 ms. Provider latency
 can exceed the target; this controller does not delay already-slow replies.
-Timing settings are explicit constants, separate from prompt configuration.
+`config/timing.json` is the sole source of timing defaults, separate from prompt
+configuration. `scripts/config.mjs` validates all five settings and generates the
+ignored `src/core/timing.generated.js` for the timing controller. Production builds
+and development/check/test precommands generate both configurations automatically.
+`npm run config:generate` refreshes them for a running local server. Validation is
+shared by build and runtime overrides; it rejects missing/unknown fields, negative
+or nonfinite values, out-of-range browser timer values, and inconsistent limits.
+The config is bundled into content-versioned assets and not fetched at runtime.
+Changing it requires a rebuild/deployment (or local regeneration and reload).
 
 After generation, the engine awaits pacing before appending and persisting the
 user/assistant pair. AbortSignal cancels both networking and this delay, with
