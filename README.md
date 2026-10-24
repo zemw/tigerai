@@ -52,5 +52,24 @@ Expected URL: https://zemw.github.io/tigerai/
 
 ## License
 
-[TigerAI Noncommercial License](LICENSE). Commercial use requires prior written
-consent from zemw. This project is source-available, not OSI open source.
+[TigerAI Noncommercial Source-Sharing License 1.1](LICENSE), a custom
+source-available license, not an OSI-approved open source license.
+
+- Noncommercial use, modification, and redistribution are permitted.
+- Distribute a project incorporating TigerAI: provide its complete corresponding
+  source to recipients under the same license, including your modifications.
+- Host it for other users: prominently offer the running version's source under
+  the same license. Source links must remain available for at least three years
+  after the last distribution or service use of that version.
+- Purely private noncommercial modifications do not require publication.
+- **All commercial use requires prior written consent from zemw**, even if you
+  publish the source. This includes commercial internal use and revenue-generating
+  services. Contact [zemw](https://github.com/zemw) for separate commercial terms.
+
+Source sharing excludes credentials and user data. Independent programs merely
+communicating through ordinary network protocols are outside the covered work.
+The complete license defines the scope and takes precedence over this summary.
+
+Intentionally submitted contributions also authorize zemw to grant commercial
+licenses for those contributions; contributors retain copyright. See section 7.
+Earlier releases retain the permissions already granted under their earlier terms.

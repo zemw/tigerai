@@ -77,3 +77,13 @@ verify identity persistence, failed-reply retry, ordered rules, storage, concurr
 and sanitized provider errors. `npm run build` copies runtime files and license
 into dist. GitHub Actions runs checks and deploys a Pages artifact without API keys.
 Live model verification requires a user-supplied key and is separate from tests.
+
+## License and source availability
+
+The TigerAI Noncommercial Source-Sharing License 1.1 requires prior written
+commercial permission, source provision for distribution, and a prominent source
+offer for network users. The menu links to the public source repository; operators
+of modified versions must update that link to their actual running source. Keep
+version-specific source available for the retention period defined in LICENSE.
+Private noncommercial modifications are exempt until distributed or offered to
+other network users. Never publish credentials or user conversations as source.

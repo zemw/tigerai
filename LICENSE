@@ -1,29 +1,152 @@
-TigerAI Noncommercial License 1.0
-Copyright (c) 2026 zemw and contributors
+TigerAI Noncommercial Source-Sharing License 1.1
+Effective date: 24 October 2026
 
-Permission is granted to use, study, copy, modify, and redistribute this software
-and documentation (the Software) solely for noncommercial purposes, subject to
-these terms. All copies and substantial portions must retain this notice and
-license. Modified distributions must identify modifications and retain these terms.
+Copyright (c) 2026 zemw and contributors.
+Project author and commercial licensing contact: zemw, https://github.com/zemw
 
-Any commercial use requires prior written consent from the author, zemw
-(https://github.com/zemw), under separately agreed terms. Commercial use includes
-selling or licensing the Software, paid or advertising-supported services using
-it, and internal use to operate or support a commercial business. This restriction
-applies to modified versions, hosted services, and uses without redistribution.
-Recipients may not grant commercial rights they have not obtained from the author.
-No trademark rights are granted. All rights not expressly granted are reserved.
+1. DEFINITIONS
 
-Unless expressly agreed otherwise in writing, contributions submitted for inclusion
-are provided under these terms. Contributors retain copyright and authorize zemw
-to grant separate commercial permissions for their submitted contributions.
-Rights granted here terminate automatically upon violation of these terms.
+"Software" means the TigerAI code, configuration, prompts, documentation, and
+other material expressly provided under this license.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
-NONINFRINGEMENT. IN NO EVENT SHALL AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR
+"Covered Work" means the Software, any modified version or derivative of it,
+and any combined software application incorporating or linking to the Software
+as a component. Independent programs merely distributed alongside a Covered
+Work, or communicating with it solely through an ordinary network protocol,
+are not Covered Works solely for that reason.
+
+"Corresponding Source" means the complete, machine-readable preferred form
+for modifying the Covered Work, including your modifications, incorporated
+application code, prompt and rule configuration, interface definitions, and
+scripts and instructions needed to build, install, and run that version.
+Minified bundles or compiled output alone do not qualify. Encoded configuration
+qualifies only if the source includes tools and instructions to decode, edit,
+and re-encode it. General-purpose tools, operating systems, and independently
+licensed unmodified dependencies need not be copied into the source, provided
+the dependencies and how to obtain them are documented sufficiently to build
+and run the Covered Work. Credentials, private keys, user conversations, personal
+data, and runtime user data are not required; provide safe example configuration
+where needed instead.
+
+"Commercial Use" means any use primarily intended for or directed toward
+commercial advantage or monetary compensation. It includes selling or charging
+for the Covered Work or access to it; using it in paid, advertising-supported,
+sponsored, or other revenue-generating products or services; and using it to
+operate or support a commercial business, including internal business use.
+Commercial Use remains commercial even if the Covered Work itself is free of
+charge, its source is shared, or the operator is a nonprofit organization.
+
+"Noncommercial Use" means use that is not Commercial Use. Personal study,
+private entertainment, hobby projects, and educational or academic research
+qualify only when they are not directed toward a commercial application or
+advantage. Paying an independent hosting or AI API provider for resources does
+not, by itself, make an otherwise noncommercial activity commercial.
+
+2. NONCOMMERCIAL PERMISSION
+
+Subject to this license, each copyright holder grants you a worldwide,
+nonexclusive, royalty-free copyright license to use, copy, study, modify, and
+redistribute their contributions to the Software, and to create and share
+Covered Works, solely for Noncommercial Use. These permissions are conditional
+on compliance with all applicable terms below. No trademark rights are granted.
+Rights not expressly granted are reserved. Rights that applicable law gives
+you independently of this license are not limited by it.
+
+3. COMMERCIAL USE REQUIRES PRIOR WRITTEN CONSENT
+
+No permission for Commercial Use is granted by this license. You must obtain
+prior written consent from zemw, the project author, under separately agreed
+terms before any Commercial Use of the Covered Work. Publishing source code,
+providing attribution, or receiving a copy from another person does not replace
+that consent. Silence or failure to enforce is not consent. Separate permission
+applies only to the parties, work, uses, and duration it expressly covers.
+The author may grant permissions only for rights the author owns or is authorized
+to license; separate third-party permissions may also be necessary.
+
+4. SOURCE SHARING WHEN DISTRIBUTING
+
+Whenever you give another person a copy of a Covered Work, whether as source,
+compiled code, a browser application, an installer, or another form, you must:
+
+(a) provide that recipient the complete Corresponding Source, at no charge,
+    either with the copy or through a clearly identified download link accessible
+    without a paid subscription or a separate confidentiality agreement;
+(b) license your contributions to the Covered Work under this same license,
+    and provide a copy of this license with the work and its source;
+(c) preserve copyright, attribution, license, and disclaimer notices, and clearly
+    identify your modifications and their dates; and
+(d) impose no additional terms or technical restrictions that prevent recipients
+    from exercising the rights this license grants.
+
+If you use a download link, maintain source access for at least three years
+after your last distribution of that version. Provide source for the actual
+version distributed; an unrelated or outdated upstream repository is insufficient.
+An unmodified version may link to the exact upstream source revision if it
+satisfies these requirements; you remain responsible for source availability.
+
+5. SOURCE SHARING FOR NETWORK SERVICES
+
+If you operate a Covered Work so that other people can interact with it remotely
+over a network, you must prominently offer those users a clearly labeled,
+no-charge link to the complete Corresponding Source of the version in operation,
+under this same license. Make the offer visible in the user interface, or in
+service documentation for an interface without a visual UI. The offer and source
+must remain available throughout operation and for at least three years after
+that version was last offered to users. This applies to unmodified as well as
+modified versions and applies even when no executable is distributed.
+
+6. PRIVATE USE AND SCOPE
+
+Purely private Noncommercial Use and modifications do not require publication
+when you neither distribute copies nor allow other people to interact remotely
+with the Covered Work. Distribution triggers section 4; remote use by others
+triggers section 5. The source-sharing obligations cover the complete Covered
+Work as defined in section 1, not unrelated independent projects or personal data.
+Sharing source never authorizes Commercial Use.
+
+Independently licensed third-party material retains its own license. This license
+does not grant rights to relicense such material or waive its conditions. You may
+combine material only when you can satisfy all applicable licenses; in particular,
+you may not assume this license is compatible with GPL or AGPL components.
+
+7. DOWNSTREAM RIGHTS AND CONTRIBUTIONS
+
+Recipients receive permissions for the original Software directly from its
+copyright holders under this license; you may not grant broader rights to it.
+Your contributions to a distributed or network-accessible Covered Work must be
+available under this license, without preventing you from separately licensing
+code you independently own, subject to the rights of other copyright holders.
+
+If you intentionally submit a contribution for inclusion in the official TigerAI
+project, you represent that you have the right to do so. Unless separately agreed
+in writing, you license that contribution under this license and also grant zemw
+a perpetual, worldwide, nonexclusive, royalty-free right to use, modify,
+distribute, sublicense, and commercially license it. You retain your copyright.
+This additional grant applies to intentionally submitted project contributions,
+not automatically to independent forks or their unsubmitted modifications.
+
+8. TERMINATION AND CURE
+
+If you violate this license, the permissions it grants terminate automatically.
+For a first violation, they are reinstated if you completely cure it within
+30 days after receiving written notice from a copyright holder. Subsequent
+violations require express reinstatement by the affected copyright holder.
+Reinstatement does not erase liability for prior unauthorized use. Termination
+of your rights does not terminate the rights of recipients who remain compliant.
+
+9. NO WARRANTY; LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
+"AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NONINFRINGEMENT.
+IN NO EVENT SHALL AUTHORS, CONTRIBUTORS, OR COPYRIGHT HOLDERS BE LIABLE FOR
 ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT, OR OTHERWISE,
-ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
+ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR ITS USE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-This is a source-available noncommercial license, not an OSI-approved open source
-license. Third-party components remain subject to their own licenses.
+10. LICENSE IDENTITY AND VERSIONS
+
+This is a custom source-available license. It is not the GNU GPL, GNU AGPL,
+PolyForm, or an OSI-approved open source license. Only this version is granted;
+a future license version does not apply automatically. This license does not
+withdraw permissions already granted for earlier releases under earlier terms.
