@@ -2,21 +2,25 @@
 
 ## Module boundaries
 
-TigerAI is a dependency-free static ES module frontend hosted on GitHub Pages.
+TigerAI is a static ES module frontend hosted on GitHub Pages, with no third-party
+runtime dependencies. esbuild is a locked development dependency for production
+bundling and minification.
 
 ```text
 UI → ChatEngine → Provider → external HTTPS model endpoint
           ↓
      persist(room) → BrowserStorage
           ↑
-  encoded prompt configuration
+  generated encoded prompt configuration
 ```
 
 - `src/core/engine.js`: room lifecycle and generation pipeline, with no DOM,
   localStorage, or fetch dependencies. Exposes `createRoom(id?)` and
   `ChatEngine(provider, persist, rules?).send(room, text, signal?)`.
-- `src/core/prompts.js`: Base64 JSON configuration for profile creation, identity,
-  and ordered response rules. `scripts/prompts.mjs` imports and exports editable JSON.
+- `config/prompts.json`: editable profile-generation prompt, identity instruction,
+  and ordered rules. `scripts/prompt-config.mjs` validates and encodes it into the
+  ignored `src/core/prompts.generated.js`, re-exported by `src/core/prompts.js`.
+  `scripts/prompts.mjs` remains available for JSON import/export.
 - `src/adapters/provider.js`: OpenAI-compatible chat completions transport.
   Contract: `complete(messages, signal): Promise<string>`. Replace this adapter for
   a different API. The endpoint and model are connection settings.
@@ -74,8 +78,12 @@ There is no TigerAI backend or analytics service. Characters are fictional AI.
 
 `npm run check` checks syntax. `npm test` uses deterministic fake providers to
 verify identity persistence, failed-reply retry, ordered rules, storage, concurrency,
-and sanitized provider errors. `npm run build` copies runtime files and license
-into dist. GitHub Actions runs checks and deploys a Pages artifact without API keys.
+and sanitized provider errors. Build tests verify Unicode configuration round trips,
+validation failures, bundled execution, no plaintext prompts/source maps in output,
+and asset version changes. `npm run build` validates/encodes prompts, bundles and
+minifies JavaScript, minifies CSS, and copies HTML and the license into dist.
+GitHub Actions installs locked build dependencies with `npm ci`, runs checks, and
+deploys a Pages artifact without API keys.
 Live model verification requires a user-supplied key and is separate from tests.
 
 ## License and source availability
@@ -113,10 +121,33 @@ may be unavailable or evicted. Logging intentionally reveals decoded prompts.
 
 ## Browser cache consistency
 
-Production builds place all JavaScript modules and CSS in a directory named from
-an SHA-256 content fingerprint of the page, stylesheet, and source tree. The
-published HTML references that release directory. Relative imports remain inside
-the same version, preventing browsers from mixing newly published HTML with old
-cached modules. Changing even a nested module changes the URLs for the release.
-A browser still showing an already-open older page may need a reload to discover
-a new deployment; no browser data or saved credentials need to be cleared.
+Production builds place bundled JavaScript and minified CSS in a directory named
+from an SHA-256 fingerprint of the finished assets and HTML template. The page
+references that release directory, preventing browsers from mixing newly published
+HTML with old cached modules. Prompt JSON and nested module changes update the
+bundle and asset URLs. An already-open older page may need a reload to discover a
+new deployment; browser data and saved credentials need not be cleared.
+
+## Build-time prompt pipeline
+
+`config/prompts.json` is the only prompt source of truth. Validation requires
+nonempty character/identity strings, an array of rules, unique nonempty rule IDs,
+boolean enabled flags, and nonempty rule text. The JSON array defines rule order;
+there is no separate numeric priority field. UTF-8 JSON is encoded to Base64 for
+an ignored generated module before development, checks, tests, and production
+builds. The decoder preserves Unicode. Existing import/export tooling edits the
+JSON source rather than maintaining a separate encoded configuration.
+
+esbuild bundles the browser entry point to minified ESM targeting ES2022 and
+Safari 15.4 syntax; the existing application still requires the browser APIs it
+uses, such as dialog and IndexedDB. Build dependencies are not browser runtime
+dependencies. Source maps are not published. The distribution contains only
+index.html, LICENSE, and content-versioned app.js/style.css. The source repository
+retains the readable modules, prompt JSON, build instructions, and dependency lock
+file required to modify and reproduce the application under its license.
+
+Minification reduces transfer size, not a guarantee of lower runtime memory.
+Neither minification nor Base64 is a security boundary. Repository viewers and
+API/debug-log inspection can recover prompts. Confidential prompts would require
+a backend. This change does not add post-generation rule validation or change
+the character lifecycle.

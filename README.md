@@ -5,9 +5,11 @@ meet a fictional 20-year-old college student majoring in computer science.
 
 ## Development
 
-Requires Node.js 22+ and Python 3. No dependencies to install.
+Requires Node.js 22+ and Python 3. esbuild is a pinned build-only dependency;
+the published application has no third-party runtime dependencies.
 
 ```sh
+npm ci
 npm run dev
 # Open http://localhost:5173
 npm run check
@@ -30,18 +32,40 @@ Chats and character profiles are also saved locally. Clearing site storage delet
 them. Each generation sends the profile, rules, and full dialogue to your selected
 provider. Only use an endpoint you trust: your key is sent there directly.
 
-Prompts are Base64 encoded, which is reversible obfuscation, not secrecy. A static
-frontend cannot hide prompts from developer tools or network inspection.
+## Prompt engineering and production builds
+
+Edit **[config/prompts.json](config/prompts.json)** directly. It is the single
+editable source for the `character` generation prompt, `identity` instruction,
+and ordered `rules` array. Each rule has a unique `id`, boolean `enabled`, and
+nonempty `text`; enabled rules stack in array order. Move entries to change their
+order, append entries to add rules, or set `enabled` to false to disable one.
+
+Character prompt changes affect new rooms; saved room profiles remain frozen.
+Identity and response rules are applied before subsequent reply requests. They
+guide generation, not a separate post-response validation pass.
 
 ```sh
-node scripts/prompts.mjs export /tmp/tigerai-prompts.json
-# Edit character, identity, and the ordered rules array.
-node scripts/prompts.mjs import /tmp/tigerai-prompts.json
+# Edit config/prompts.json, then:
+npm run build
+# Or regenerate prompts for an already-running development server:
+npm run prompts:generate
 ```
 
-Rules have `id`, `enabled`, and `text`. Enabled rules stack in array order. Profile
-prompt changes affect new rooms; rule changes affect subsequent replies. Do not
-commit decoded prompt files. See [ARCHITECTURE.md](ARCHITECTURE.md).
+The development, check, and test commands automatically generate
+`src/core/prompts.generated.js` from JSON. This generated file is ignored by Git;
+do not edit it. Restart development or run `npm run prompts:generate` after JSON
+edits, then reload the browser. The previous export/import commands remain
+available, but direct JSON editing is now the normal workflow.
+
+Production builds validate the JSON, Base64-encode it, bundle and minify JavaScript
+with esbuild, minify CSS, and give the finished assets content-versioned URLs.
+Only the page, production assets, and license are published in `dist/`; editable
+JSON, source modules, and source maps are excluded. GitHub Actions uses `npm ci`
+to install the locked build dependency before checks and deployment.
+
+Base64 and minification are reversible obfuscation, not secrecy. Readable code
+and plaintext JSON remain publicly available in GitHub, and prompts appear in API
+requests and opt-in debug logs. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Local debug logs
 

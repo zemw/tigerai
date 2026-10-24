@@ -7,10 +7,17 @@
     "dev": "python3 -m http.server 5173",
     "build": "node scripts/build.mjs",
     "test": "node --test",
-    "check": "node --check src/ui.js && node --check src/core/engine.js && node --check src/adapters/provider.js && node --check src/adapters/debug-log.js"
+    "check": "node --check src/ui.js && node --check src/core/engine.js && node --check src/adapters/provider.js && node --check src/adapters/debug-log.js",
+    "prompts:generate": "node scripts/generate-prompts.mjs",
+    "predev": "npm run prompts:generate",
+    "precheck": "npm run prompts:generate",
+    "pretest": "npm run prompts:generate"
   },
   "engines": {
     "node": ">=22"
   },
-  "license": "SEE LICENSE IN LICENSE"
+  "license": "SEE LICENSE IN LICENSE",
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
 }
